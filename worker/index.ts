@@ -87,7 +87,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
+          model: "openai/gpt-oss-20b",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             ...payload.messages,
