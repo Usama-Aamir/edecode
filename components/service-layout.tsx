@@ -10,6 +10,7 @@ export interface ServiceLayoutProps {
   trust?: string;
   sections: { title: string; content: ReactNode }[];
   ctaText: string;
+  demo?: ReactNode;
 }
 
 export function ServiceLayout({
@@ -20,6 +21,7 @@ export function ServiceLayout({
   trust,
   sections,
   ctaText,
+  demo,
 }: ServiceLayoutProps) {
   return (
     <section className="pt-[120px] pb-[100px]">
@@ -63,6 +65,8 @@ export function ServiceLayout({
             </p>
           )}
         </Reveal>
+
+        {demo && <Reveal className="mb-14">{demo}</Reveal>}
 
         {sections.map((section, i) => (
           <Reveal key={i} className="max-w-[840px] mb-14">

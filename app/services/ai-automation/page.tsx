@@ -1,4 +1,5 @@
 import { ServiceLayout } from "@/components/service-layout";
+import { ChatDemo } from "@/components/chat-demo";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function AIPage() {
         },
       ]}
       trust="Built on hands-on experience shipping AI systems for platforms used in interview processing, national employment matching, and SME customer service — across Pakistan, the UK, and Malaysia."
+      demo={<ChatDemo />}
       sections={[
         {
           title: "How engagements work",
