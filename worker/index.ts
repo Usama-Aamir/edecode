@@ -143,6 +143,10 @@ export default {
       return jsonResponse({ error: "Method not allowed." }, 405);
     }
 
+    if (url.pathname === "/api/debug-env" && request.method === "GET") {
+      return jsonResponse({ groqKeyPresent: !!env.GROQ_API_KEY });
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
