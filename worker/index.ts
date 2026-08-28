@@ -1,8 +1,8 @@
-// @ts-nocheck
-import type { PagesFunction } from "@cloudflare/workers-types";
+import type { ExecutionContext, Fetcher } from "@cloudflare/workers-types";
 
 interface Env {
   GROQ_API_KEY: string;
+  ASSETS: Fetcher;
 }
 
 const SYSTEM_PROMPT =
@@ -43,8 +43,7 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const { request, env } = context;
+async function handleChat(request: Request, env: Env): Promise<Response> {
   const ip = getClientIP(request);
 
   if (isRateLimited(ip)) {
@@ -126,11 +125,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     console.error("Groq request failed:", err);
     return jsonResponse({ error: "Something went wrong — try again." }, 502);
   }
-};
+}
 
-export const onRequest: PagesFunction<Env> = async (context) => {
-  if (context.request.method === "POST") {
-    return onRequestPost(context);
-  }
-  return jsonResponse({ error: "Method not allowed." }, 405);
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    _ctx: ExecutionContext
+  ): Promise<Response> {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/api/chat" && request.method === "POST") {
+      return handleChat(request, env);
+    }
+
+    if (url.pathname === "/api/chat") {
+      return jsonResponse({ error: "Method not allowed." }, 405);
+    }
+
+    return env.ASSETS.fetch(request);
+  },
 };
