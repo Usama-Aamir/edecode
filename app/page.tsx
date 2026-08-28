@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Reveal } from "@/components/reveal";
+import { HeroChatPrompt } from "@/components/hero-chat-prompt";
 
 export default function Home() {
   return (
@@ -47,6 +48,10 @@ export default function Home() {
                 See our work
               </Link>
             </div>
+          </Reveal>
+
+          <Reveal>
+            <HeroChatPrompt />
           </Reveal>
         </div>
       </section>

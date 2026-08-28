@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 interface Message {
@@ -10,7 +10,19 @@ interface Message {
 
 const DEMO_LIMIT = 8;
 
-export function ChatDemo() {
+interface ChatDemoProps {
+  initialMessage?: string;
+  sendInitialMessage?: boolean;
+  onClose?: () => void;
+  autoFocus?: boolean;
+}
+
+export function ChatDemo({
+  initialMessage = "",
+  sendInitialMessage = false,
+  onClose,
+  autoFocus = false,
+}: ChatDemoProps = {}) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -18,18 +30,20 @@ export function ChatDemo() {
         "Hi — I can answer questions about Edecode's services, process, or whether AI fits your business problem.",
     },
   ]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialMessage);
   const [loading, setLoading] = useState(false);
   const [userCount, setUserCount] = useState(0);
+  const initialMessageSent = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const remaining = DEMO_LIMIT - userCount;
   const limitReached = remaining <= 0;
 
-  async function sendMessage(e?: React.FormEvent) {
+  async function sendMessage(e?: React.FormEvent, message = input) {
     e?.preventDefault();
-    if (!input.trim() || loading || limitReached) return;
+    if (!message.trim() || loading || limitReached) return;
 
-    const content = input.trim();
+    const content = message.trim();
     const nextMessages: Message[] = [...messages, { role: "user", content }];
     setMessages(nextMessages);
     setInput("");
@@ -66,8 +80,17 @@ export function ChatDemo() {
     }
   }
 
+  useEffect(() => {
+    if (sendInitialMessage && initialMessage && !initialMessageSent.current) {
+      initialMessageSent.current = true;
+      void sendMessage(undefined, initialMessage);
+    } else if (autoFocus) {
+      inputRef.current?.focus();
+    }
+  }, []);
+
   return (
-    <div className="bg-surface border border-border rounded-[14px] p-8">
+    <div className="bg-surface border border-border rounded-[14px] p-5 sm:p-8">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
         <div>
           <h3 className="font-heading font-semibold tracking-tight text-[24px] text-text mb-1.5">
@@ -77,11 +100,23 @@ export function ChatDemo() {
             A live demo, not a real support channel. Limited to {DEMO_LIMIT} messages.
           </p>
         </div>
-        {limitReached ? null : (
-          <span className="font-mono text-xs text-text-muted">
-            {remaining} message{remaining === 1 ? "" : "s"} left
-          </span>
-        )}
+        <div className="flex items-center gap-4">
+          {limitReached ? null : (
+            <span className="font-mono text-xs text-text-muted">
+              {remaining} message{remaining === 1 ? "" : "s"} left
+            </span>
+          )}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="font-mono text-xs text-text-muted transition-colors hover:text-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
+              aria-label="Collapse chat"
+            >
+              Close
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="h-[260px] overflow-y-auto space-y-3 mb-6 pr-1 scrollbar-thin">
@@ -129,12 +164,10 @@ export function ChatDemo() {
       ) : (
         <form onSubmit={sendMessage} className="flex gap-3">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) sendMessage();
-            }}
             placeholder="Ask about AI, process, or fit for your problem..."
             className="flex-1 bg-bg border border-border rounded-md px-4 py-3 text-[14.5px] text-text placeholder:text-text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue"
             aria-label="Message"

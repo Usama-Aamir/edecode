@@ -115,6 +115,16 @@ html[data-theme="light"] {
     color: var(--btn-text);
   }
 
+  .terminal-cursor {
+    animation: terminal-blink 1s steps(1) infinite;
+  }
+
+  @keyframes terminal-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
