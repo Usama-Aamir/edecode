@@ -7,8 +7,13 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 
 type Theme = "dark" | "light";
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => { finished: Promise<void> };
+};
 
 const ThemeContext = createContext<{
   theme: Theme;
@@ -25,13 +30,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggle = () => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", next);
+    const root = document.documentElement;
+    const next = theme === "dark" ? "light" : "dark";
+    const updateTheme = () => {
+      flushSync(() => setTheme(next));
+      root.setAttribute("data-theme", next);
       try {
         localStorage.setItem("theme", next);
       } catch {}
-      return next;
+    };
+    const transitionDocument = document as ViewTransitionDocument;
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (!transitionDocument.startViewTransition || reduceMotion) {
+      updateTheme();
+      return;
+    }
+
+    if (root.classList.contains("curtain-down")) return;
+    root.classList.add("curtain-down");
+    const transition = transitionDocument.startViewTransition(updateTheme);
+    void transition.finished.finally(() => {
+      root.classList.remove("curtain-down");
     });
   };
 
